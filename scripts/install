@@ -53,8 +53,7 @@ pushd "$install_dir"
         echo "Unsupported architecture: $(uname -m)"
         exit 1
     fi
-    wget --output-document invidious https://github.com/selfhoster1312/invidious-precompile/re
-leases/download/$release/invidious.$ARCH
+    wget --output-document invidious https://github.com/selfhoster1312/invidious-precompile/releases/download/$release/invidious.$ARCH
     if ! echo "$sha256 invidious" | sha256sum --check --status; then
         echo "WRONG CHECKSUM"
         exit 1
