@@ -46,12 +46,22 @@ chown -R $app:www-data "$install_dir"
 git config --system --add safe.directory $install_dir
 
 # Download, check integrity, uncompress and patch the source from GitHub
-git clone https://github.com/selfhoster1312/invidious "$install_dir" --quiet
+git clone --depth=1 https://github.com/iv-org/invidious "$install_dir" --quiet
 
 pushd "$install_dir"
-	git reset --hard --quiet $version_commit
-	cc -o invidious.o -o invidious -lpcre -lrt -lm -lgc -lunwind
-	#make
+    if [[ "$(uname -m)" = "x86_64" ]]; then
+        ARCH=amd64
+    else
+        echo "Unsupported architecture: $(uname -m)"
+        exit 1
+    fi
+    wget --output-document invidious https://github.com/selfhoster1312/invidious-precompile/re
+leases/download/$release/invidious.$ARCH
+    if ! echo "$sha256 invidious" | sha256sum --check --status; then
+        echo "WRONG CHECKSUM"
+        exit 1
+    fi
+    chmod +x invidious
 popd
 
 chmod -R o-rwx "$install_dir"
