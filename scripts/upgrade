@@ -54,8 +54,6 @@ fi
 #=================================================
 ynh_script_progression --message="Upgrading dependencies..." --weight=8
 
-ynh_exec_warn_less curl -fsSL https://crystal-lang.org/install.sh | bash -s -- --channel=stable
-
 #=================================================
 # DOWNLOAD, CHECK AND UNPACK SOURCE
 #=================================================

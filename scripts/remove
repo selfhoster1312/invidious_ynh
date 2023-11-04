@@ -27,8 +27,6 @@ fi
 #=================================================
 ynh_script_progression --message="Removing system configurations related to $app..." --weight=10
 
-dpkg --remove crystal
-
 # Remove the dedicated systemd config
 ynh_remove_systemd_config
 
