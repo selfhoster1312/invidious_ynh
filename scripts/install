@@ -41,11 +41,6 @@ ynh_script_progression --message="Setting up source files..." --weight=4
 mkdir -p "$install_dir"
 chown -R $app:www-data "$install_dir"
 
-git config --system --add safe.directory $install_dir
-
-# Download, check integrity, uncompress and patch the source from GitHub
-#git clone --depth=1 https://github.com/iv-org/invidious "$install_dir" --quiet
-
 ARCH="$(uname -m)"
 
 pushd "$install_dir"
@@ -81,6 +76,7 @@ pushd "$install_dir"
     fi       
 
     tar xvf invidious.$ARCH.tar.xz
+    tar xvf invidious.common.tar.xz
     chmod +x invidious
 popd
 
