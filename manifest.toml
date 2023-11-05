@@ -18,7 +18,7 @@ website = "https://invidio.us/"
 
 [integration]
 yunohost = ">= 11.2"
-architectures = ["amd64"]
+architectures = ["amd64", "arm64"]
 multi_instance = false
 ldap = false
 sso = false

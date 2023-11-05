@@ -51,7 +51,12 @@ ARCH="$(uname -m)"
 pushd "$install_dir"
     case "$ARCH" in
         x86_64)
-            echo "Setting up x86_64 (amd64) release"
+            #echo "Setting up x86_64 (amd64) release"
+            echo "Disabled for testing aarch64"
+            exit 1
+            ;;
+        aarch64)
+            echo "Setting up aarch64 (arm64) release"
             ;;
         armv6l)
             echo "Raspberry PI is not supported yet! (soon)"
