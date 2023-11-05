@@ -4,8 +4,8 @@
 # COMMON VARIABLES
 #=================================================
 
-release="v2023.11.04.1"
-sha256="22605fcacf3ca680bbb5679e0d9301a14677d3cde86296775bf8fd671b9880d3"
+release="v2023.11.05.07e127324f8fdbfb0c4b587e3d3e1ecf539935db"
+sha256="b9f8443bc6edfe17e40ab4b53152683cd898f70cb53e271e7d7002b8991c90c8"
 
 #=================================================
 # PERSONAL HELPERS

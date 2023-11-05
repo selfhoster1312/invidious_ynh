@@ -1,4 +1,4 @@
-#!/bin/bash
+﻿#!/usr/bin/env bash
 
 #=================================================
 # GENERIC START
@@ -44,20 +44,32 @@ chown -R $app:www-data "$install_dir"
 git config --system --add safe.directory $install_dir
 
 # Download, check integrity, uncompress and patch the source from GitHub
-git clone --depth=1 https://github.com/iv-org/invidious "$install_dir" --quiet
+#git clone --depth=1 https://github.com/iv-org/invidious "$install_dir" --quiet
+
+ARCH="$(uname -m)"
 
 pushd "$install_dir"
-    if [[ "$(uname -m)" = "x86_64" ]]; then
-        ARCH=amd64
-    else
-        echo "Unsupported architecture: $(uname -m)"
-        exit 1
-    fi
-    wget --output-document invidious https://github.com/selfhoster1312/invidious-precompile/releases/download/$release/invidious.$ARCH
-    if ! echo "$sha256 invidious" | sha256sum --check --status; then
+    case "$ARCH" in
+        x86_64)
+            echo "Setting up x86_64 (amd64) release"
+            ;;
+        armv6l)
+            echo "Raspberry PI is not supported yet! (soon)"
+            exit 1
+            ;;
+        *)
+            echo "Unsupported architecture: $(uname -m)"
+            exit 1
+            ;;
+    esac
+    
+    wget -q https://github.com/selfhoster1312/invidious-precompile/releases/download/$release/invidious.$ARCH.tar.xz
+    if ! echo "$sha256 invidious.$ARCH.tar.xz" | sha256sum --check --status; then
         echo "WRONG CHECKSUM"
         exit 1
-    fi
+    fi       
+
+    tar xvf invidious.$ARCH.tar.xz
     chmod +x invidious
 popd
 
