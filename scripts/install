@@ -53,7 +53,6 @@ pushd "$install_dir"
         x86_64)
             echo "Setting up x86_64 (amd64) release"
             CHECKSUM="$CHECKSUM_X86_64"
-            exit 1
             ;;
         aarch64)
             echo "Setting up aarch64 (arm64) release"
