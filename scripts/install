@@ -51,12 +51,13 @@ ARCH="$(uname -m)"
 pushd "$install_dir"
     case "$ARCH" in
         x86_64)
-            #echo "Setting up x86_64 (amd64) release"
-            echo "Disabled for testing aarch64"
+            echo "Setting up x86_64 (amd64) release"
+            CHECKSUM="$CHECKSUM_X86_64"
             exit 1
             ;;
         aarch64)
             echo "Setting up aarch64 (arm64) release"
+            CHECKSUM="$CHECKSUM_AARCH64"
             ;;
         armv6l)
             echo "Raspberry PI is not supported yet! (soon)"
@@ -68,9 +69,15 @@ pushd "$install_dir"
             ;;
     esac
     
+    wget -q https://github.com/selfhoster1312/invidious-precompile/releases/download/$release/invidious.common.tar.xz
+    if ! echo "$CHECKSUM_COMMON invidious.common.tar.xz" | sha256sum --check --status; then
+        echo "WRONG CHECKSUM FOR invidious.common.tar.xz"
+        exit 1
+    fi
+
     wget -q https://github.com/selfhoster1312/invidious-precompile/releases/download/$release/invidious.$ARCH.tar.xz
-    if ! echo "$sha256 invidious.$ARCH.tar.xz" | sha256sum --check --status; then
-        echo "WRONG CHECKSUM"
+    if ! echo "$CHECKSUM invidious.$ARCH.tar.xz" | sha256sum --check --status; then
+        echo "WRONG CHECKSUM FOR invidious.$ARCH.tar.xz"
         exit 1
     fi       
 
