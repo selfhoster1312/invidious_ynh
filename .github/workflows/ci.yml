@@ -1,0 +1,140 @@
+on:
+  push:
+permissions:
+  contents: write
+jobs:
+  common:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Calculate version
+        run: echo "version=$(date +'%Y.%m.%d-%H%M').${{ github.sha }}" >> "$GITHUB_ENV"
+      - name: Download source
+        uses: actions/checkout@v3
+        with:
+          repository: iv-org/invidious
+      - name: Archive common assets
+        run: tar -cJf invidious.common.tar.xz assets config locales
+      - name: Save common assets
+        uses: actions/upload-artifact@v3
+        with:
+          name: invidious.common.tar.xz
+          path: invidious.common.tar.xz
+  arm64:
+    strategy:
+      matrix:
+        #os: [ debian-bullseye, debian-bookworm ]
+        os: [ bullseye ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download source
+        uses: actions/checkout@v3
+        with:
+          repository: iv-org/invidious
+      - name: Setup qemu
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: arm64
+      - name: Run setup
+        uses: addnab/docker-run-action@v3
+        with:
+          image: 84codes/crystal:latest-debian-${{ matrix.os }}
+          options: |
+            --platform linux/arm64
+            --volume ${{ github.workspace }}:/build
+            --workdir /build
+          run: |
+            apt-get update
+            apt-get install --yes --no-install-recommends libssl-dev libxml2-dev libyaml-dev libgmp-dev libevent-dev libpcre3-dev libreadline-dev libsqlite3-dev zlib1g-dev librsvg2-bin
+            git config --global --add safe.directory /build
+            make
+            mv invidious invidious.${{ matrix.os }}.arm64
+      - name: Save invidious.${{ matrix.os }}.arm64
+        uses: actions/upload-artifact@v3
+        with:
+          name: invidious.${{ matrix.os }}.arm64
+          path: invidious.${{ matrix.os }}.arm64
+  amd64:
+    strategy:
+      matrix:
+        os: [ bullseye ]
+    runs-on: ubuntu-latest
+    container:
+      image: 84codes/crystal:latest-debian-${{ matrix.os }}
+    steps:
+      - name: Download source
+        uses: actions/checkout@v3
+        with:
+          repository: iv-org/invidious
+      - name: Update repos
+        run: apt-get update
+      - name: Install dependencies
+        run: apt-get install --yes --no-install-recommends libssl-dev libxml2-dev libyaml-dev libgmp-dev libevent-dev libpcre3-dev libreadline-dev libsqlite3-dev zlib1g-dev librsvg2-bin
+      - name: git workaround
+        run: git config --global --add safe.directory $(pwd)
+      - name: Build for amd64 for ${{ matrix.os }}
+        run: make
+      - name: Rename build
+        run: mv invidious invidious.${{ matrix.os }}.amd64
+      - name: Save invidious.${{ matrix.os }}.amd64
+        uses: actions/upload-artifact@v3
+        with:
+          name: invidious.${{ matrix.os }}.amd64
+          path: invidious.${{ matrix.os }}.amd64
+  publish:
+    needs: [ "common", "arm64", "amd64" ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download invidious common
+        uses: actions/download-artifact@v3
+        with:
+          name: invidious.common.tar.xz
+      - name: Download invidious arm64 bullseye
+        uses: actions/download-artifact@v3
+        with:
+          name: invidious.bullseye.arm64.tar.xz
+      # - name: Download invidious arm64 bookworm
+      #   uses: actions/download-artifact@v3
+      #   with:
+      #     name: invidious.bookworm.arm64.tar.xz
+      - name: Download invidious amd64 bullseye
+        uses: actions/download-artifact@v3
+        with:
+          name: invidious.bullseye.amd64.tar.xz
+      # - name: Download invidious amd64 bookworm
+      #   uses: actions/download-artifact@v3
+      #   with:
+      #     name: invidious.bookworm.amd64.tar.xz
+      - name: Unpack common assets
+        run: tar xvf invidious.common.tar.xz
+      - name: Generate packages
+        run: |
+          for arch in $ARCH; do
+            for distro in $DISTRO; do
+              mkdir invidious_${{ env.version }}_$arch
+              mkdir -p invidious_${{ env.version }}_$arch/opt/invidious
+              cp -R assets config locales invidious_${{ env.version }}_$arch/opt/invidious
+              mv invidious.$distro.$arch invidious_${{ env.version }}_$arch/opt/invidious/invidious
+              chmod +x invidious_${{ env.version }}_$arch/opt/invidious/invidious
+              mkdir -p invidious_${{ env.version }}_$arch/DEBIAN
+              echo "Package: invidious" >> invidious_${{ env.version }}_$arch/DEBIAN/control
+              echo "Version: ${{ env.version }}" >> invidious_${{ env.version }}_$arch/DEBIAN/control
+              echo "Architecture: $arch" >> invidious_${{ env.version }}_$arch/DEBIAN/control
+              echo "Maintainer: selfhoster1312 <selfhoster1312@kl.netlib.re>" >> invidious_${{ env.version }}_$arch/DEBIAN/control
+              echo "Description: Invidious is a lightweight Youtube frontend." >> invidious_${{ env.version }}_$arch/DEBIAN/control
+              echo "libssl-dev libxml2-dev libyaml-dev libgmp-dev libevent-dev libpcre3-dev libreadline-dev libsqlite3-dev zlib1g-dev postgresql librsvg2-bin" >> invidious_${{ env.version }}_$arch/DEBIAN/control
+              dpkg --build invidious_${{ env.version }}_$arch
+              mv invidious_${{ env.version }}_$arch.deb invidious_$distro_${{ env.version }}_$arch.deb
+            done
+          done
+        env:
+          arch: |
+            amd64
+            arm64
+          distro: |
+            bullseye
+            #bookworm
+      - name: Release packages
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "invidious_bullseye_${{ env.version }}_amd64.deb,invidious_bullseye_${{ env.version }}_arm64.deb"
+          tag: "v${{ env.version }}"
