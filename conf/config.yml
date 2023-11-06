@@ -946,4 +946,4 @@ default_user_preferences:
 ##
 ## Default: <none>
 ##
-openssl_ca_certs_dir: /etc/ssl/certs/
+#openssl_ca_certs_dir: /etc/ssl/certs/

@@ -11,6 +11,7 @@ WorkingDirectory=__INSTALL_DIR__
 ExecStart=__INSTALL_DIR__/invidious -o invidious.log
 RestartSec=2s
 Restart=always
+Environment="SSL_CERT_DIR=/etc/ssl/certs/"
 
 # Sandboxing options to harden security
 # Depending on specificities of your service/app, you may need to tweak these 
