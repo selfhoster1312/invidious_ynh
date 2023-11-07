@@ -92,7 +92,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Calculate version
-        run: echo "version=$(date +'%Y.%m.%d-%H%M').${{ github.sha }}" >> "$GITHUB_ENV"
+        run: echo "version=$(date +'%Y.%m.%d-%H%M')" >> "$GITHUB_ENV"
       - name: Download invidious common
         uses: actions/download-artifact@v3
         with:
@@ -117,8 +117,8 @@ jobs:
         run: tar xvf invidious.common.tar.xz
       - name: Generate packages
         run: |
-          for arch in $ARCH; do
-            for distro in $DISTRO; do
+          for arch in arm64 amd64; do
+            for distro in bullseye bookworm; do
               mkdir invidious_${{ env.version }}_$arch
               mkdir -p invidious_${{ env.version }}_$arch/opt/invidious
               cp -R assets config locales invidious_${{ env.version }}_$arch/opt/invidious
@@ -135,13 +135,6 @@ jobs:
               mv invidious_${{ env.version }}_$arch.deb invidious_$distro_${{ env.version }}_$arch.deb
             done
           done
-        env:
-          arch: |
-            amd64
-            arm64
-          distro: |
-            bullseye
-            bookworm
       - name: Release packages
         uses: ncipollo/release-action@v1
         with:
