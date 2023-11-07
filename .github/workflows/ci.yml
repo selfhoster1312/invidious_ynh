@@ -44,12 +44,12 @@ jobs:
             apt-get update
             apt-get install --yes --no-install-recommends libssl-dev libxml2-dev libyaml-dev libgmp-dev libevent-dev libpcre3-dev libreadline-dev libsqlite3-dev zlib1g-dev librsvg2-bin
             cc invidious.${{ matrix.os }}.arm64.o -o invidious  -rdynamic -L/usr/bin/../lib/crystal -lyaml  -lxml2  -lsqlite3  -lz `command -v pkg-config > /dev/null && pkg-config --libs --silence-errors libssl || printf %s '-lssl -lcrypto'` `command -v pkg-config > /dev/null && pkg-config --libs --silence-errors libcrypto || printf %s '-lcrypto'` -lpcre2-8 -lm -lgc -lpthread -levent  -lrt -lpthread -ldl
-            mv invidious invidious.${{ matrix.os }}.arm64
-      - name: Save invidious.${{ matrix.os }}.arm64
+            mv invidious invidious.${{ matrix.os }}.arm64.bin
+      - name: Save invidious.${{ matrix.os }}.arm64.bin
         uses: actions/upload-artifact@v3
         with:
           name: invidious.${{ matrix.os }}.arm64.bin
-          path: invidious.${{ matrix.os }}.arm64
+          path: invidious.${{ matrix.os }}.arm64.bin
   amd64:
     strategy:
       matrix:
@@ -71,12 +71,12 @@ jobs:
       - name: Build for amd64 for ${{ matrix.os }}
         run: make
       - name: Rename build
-        run: mv invidious invidious.${{ matrix.os }}.amd64
-      - name: Save invidious.${{ matrix.os }}.amd64
+        run: mv invidious invidious.${{ matrix.os }}.amd64.bin
+      - name: Save invidious.${{ matrix.os }}.amd64.bin
         uses: actions/upload-artifact@v3
         with:
           name: invidious.${{ matrix.os }}.amd64.bin
-          path: invidious.${{ matrix.os }}.amd64
+          path: invidious.${{ matrix.os }}.amd64.bin
       - name: Cross compile for arm64
         run: crystal build src/invidious.cr --progress --stats --error-trace --cross-compile --target "aarch64-linux-gnu"
       - name: Rename pre-linking object
