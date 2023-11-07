@@ -104,8 +104,8 @@ chown $app:$app "$install_dir/config.yml"
 #=================================================
 ynh_script_progression --message="Building Invidious.. (this will take some time and resources!)" --weight=60
 
-pushd "$install_dir"
-	/opt/invidious/invidious --migrate
+pushd "/opt/invidious/"
+	INVIDIOUS_CONFIG_FILE="$install_dir"/config.yml /opt/invidious/invidious --migrate
 popd
 
 #=================================================
