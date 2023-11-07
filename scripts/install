@@ -41,43 +41,47 @@ ynh_script_progression --message="Setting up source files..." --weight=4
 mkdir -p "$install_dir"
 chown -R $app:www-data "$install_dir"
 
-ARCH="$(uname -m)"
+# Detect architecture
+#ARCH="$(uname -m)"
+ARCH="$(dpkg --print-architecture)"
+# Detect debian version
+DISTRO="$(grep '^VERSION_CODENAME' /etc/os-release | sed 's/.*=//')"
 
-pushd "$install_dir"
-    case "$ARCH" in
-        x86_64)
-            echo "Setting up x86_64 (amd64) release"
-            CHECKSUM="$CHECKSUM_X86_64"
+find_checksum() {
+    case "$DISTRO/$ARCH" in
+        bullseye/amd64)
+            CHECKSUM="$CHECKSUM_X86_64_BULLSEYE"
             ;;
-        aarch64)
-            echo "Setting up aarch64 (arm64) release"
-            CHECKSUM="$CHECKSUM_AARCH64"
+        bookworm/amd64)
+            CHECKSUM="$CHECKSUM_X86_64_BOOKWORM"
             ;;
-        armv6l)
-            echo "Raspberry PI is not supported yet! (soon)"
-            exit 1
+        bullseye/arm64)
+            CHECKSUM="$CHECKSUM_AARCH64_BULLSEYE"
+            ;;
+        bookworm/arm64)
+            CHECKSUM="$CHECKSUM_AARCH64_BOOKWORM"
             ;;
         *)
-            echo "Unsupported architecture: $(uname -m)"
+            echo "Error: Unsupported release/architecture: $DISTRO/$ARCH"
             exit 1
             ;;
     esac
-    
-    wget -q https://github.com/selfhoster1312/invidious-precompile/releases/download/$release/invidious.common.tar.xz
-    if ! echo "$CHECKSUM_COMMON invidious.common.tar.xz" | sha256sum --check --status; then
-        echo "WRONG CHECKSUM FOR invidious.common.tar.xz"
+}
+
+find_pkg() {
+    echo -n "invidious_${DISTRO}_${release}_${ARCH}.deb"
+}
+
+pushd "$install_dir"
+    find_checksum
+    pkg="$(find_pkg)"
+    wget -q "https://github.com/selfhoster1312/invidious_ynh/releases/download/v$release/$pkg"
+    if ! echo "$CHECKSUM $pkg" | sha256sum --check --status; then
+        echo "WRONG CHECKSUM FOR $pkg"
         exit 1
     fi
 
-    wget -q https://github.com/selfhoster1312/invidious-precompile/releases/download/$release/invidious.$ARCH.tar.xz
-    if ! echo "$CHECKSUM invidious.$ARCH.tar.xz" | sha256sum --check --status; then
-        echo "WRONG CHECKSUM FOR invidious.$ARCH.tar.xz"
-        exit 1
-    fi       
-
-    tar xvf invidious.$ARCH.tar.xz
-    tar xvf invidious.common.tar.xz
-    chmod +x invidious
+    dpkg -i "$pkg"
 popd
 
 chmod -R o-rwx "$install_dir"
@@ -88,10 +92,10 @@ chown -R $app:www-data "$install_dir"
 #=================================================
 ynh_script_progression --message="Modifying a config file..." --weight=1
 
-ynh_add_config --template="../conf/config.yml" --destination="$install_dir/config/config.yml"
+ynh_add_config --template="../conf/config.yml" --destination="$install_dir/config.yml"
 
-chmod 600 "$install_dir/config/config.yml"
-chown $app:$app "$install_dir/config/config.yml"
+chmod 600 "$install_dir/config.yml"
+chown $app:$app "$install_dir/config.yml"
 
 #=================================================
 # SPECIFIC SETUP
@@ -101,7 +105,7 @@ chown $app:$app "$install_dir/config/config.yml"
 ynh_script_progression --message="Building Invidious.. (this will take some time and resources!)" --weight=60
 
 pushd "$install_dir"
-	./invidious --migrate
+	/opt/invidious/invidious --migrate
 popd
 
 #=================================================
