@@ -119,7 +119,9 @@ jobs:
         run: |
           for arch in arm64 amd64; do
             for distro in bullseye bookworm; do
-              DEBDIR=invidious_$distro_${{ env.version }}_$arch
+              ls
+              DEBDIR=invidious_${distro}_${{ env.version }}_${arch}
+              echo "Building inside $DEBDIR"
               mkdir $DEBDIR
               mkdir -p $DEBDIR/opt/invidious
               cp -R assets config locales $DEBDIR/opt/invidious
