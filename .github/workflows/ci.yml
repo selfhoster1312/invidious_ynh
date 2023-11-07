@@ -48,7 +48,7 @@ jobs:
       - name: Save invidious.${{ matrix.os }}.arm64
         uses: actions/upload-artifact@v3
         with:
-          name: invidious.${{ matrix.os }}.arm64
+          name: invidious.${{ matrix.os }}.arm64.bin
           path: invidious.${{ matrix.os }}.arm64
   amd64:
     strategy:
@@ -75,7 +75,7 @@ jobs:
       - name: Save invidious.${{ matrix.os }}.amd64
         uses: actions/upload-artifact@v3
         with:
-          name: invidious.${{ matrix.os }}.amd64
+          name: invidious.${{ matrix.os }}.amd64.bin
           path: invidious.${{ matrix.os }}.amd64
       - name: Cross compile for arm64
         run: crystal build src/invidious.cr --progress --stats --error-trace --cross-compile --target "aarch64-linux-gnu"
@@ -100,19 +100,19 @@ jobs:
       - name: Download invidious arm64 bullseye
         uses: actions/download-artifact@v3
         with:
-          name: invidious.bullseye.arm64
+          name: invidious.bullseye.arm64.bin
       - name: Download invidious arm64 bookworm
         uses: actions/download-artifact@v3
         with:
-          name: invidious.bookworm.arm64
+          name: invidious.bookworm.arm64.bin
       - name: Download invidious amd64 bullseye
         uses: actions/download-artifact@v3
         with:
-          name: invidious.bullseye.amd64
+          name: invidious.bullseye.amd64.bin
       - name: Download invidious amd64 bookworm
         uses: actions/download-artifact@v3
         with:
-          name: invidious.bookworm.amd64
+          name: invidious.bookworm.amd64.bin
       - name: Unpack common assets
         run: tar xvf invidious.common.tar.xz
       - name: Generate packages
@@ -122,7 +122,7 @@ jobs:
               mkdir invidious_${{ env.version }}_$arch
               mkdir -p invidious_${{ env.version }}_$arch/opt/invidious
               cp -R assets config locales invidious_${{ env.version }}_$arch/opt/invidious
-              mv invidious.$distro.$arch invidious_${{ env.version }}_$arch/opt/invidious/invidious
+              mv invidious.$distro.$arch.bin invidious_${{ env.version }}_$arch/opt/invidious/invidious
               chmod +x invidious_${{ env.version }}_$arch/opt/invidious/invidious
               mkdir -p invidious_${{ env.version }}_$arch/DEBIAN
               echo "Package: invidious" >> invidious_${{ env.version }}_$arch/DEBIAN/control
