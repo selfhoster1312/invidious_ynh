@@ -81,7 +81,7 @@ pushd "$install_dir"
         exit 1
     fi
 
-    dpkg -i "$pkg"
+    apt-get install --yes "./$pkg"
 popd
 
 chmod -R o-rwx "$install_dir"
