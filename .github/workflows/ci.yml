@@ -20,20 +20,21 @@ jobs:
           name: invidious.common.tar.xz
           path: invidious.common.tar.xz
   arm64:
+    needs: [ "amd64" ]
     strategy:
       matrix:
         #os: [ debian-bullseye, debian-bookworm ]
         os: [ bullseye ]
     runs-on: ubuntu-latest
     steps:
-      - name: Download source
-        uses: actions/checkout@v3
-        with:
-          repository: iv-org/invidious
       - name: Setup qemu
         uses: docker/setup-qemu-action@v2
         with:
           platforms: arm64
+      - name: Fetch cross-compiled object
+        uses: actions/download-artifact@v3
+        with:
+          name: invidious.${{ matrix.os }}.arm64.o
       - name: Run setup
         uses: addnab/docker-run-action@v3
         with:
@@ -45,8 +46,7 @@ jobs:
           run: |
             apt-get update
             apt-get install --yes --no-install-recommends libssl-dev libxml2-dev libyaml-dev libgmp-dev libevent-dev libpcre3-dev libreadline-dev libsqlite3-dev zlib1g-dev librsvg2-bin
-            git config --global --add safe.directory /build
-            make
+            cc invidious.${{ matrix.os }}.arm64.o -o invidious  -rdynamic -L/usr/bin/../lib/crystal -lyaml  -lxml2  -lsqlite3  -lz `command -v pkg-config > /dev/null && pkg-config --libs --silence-errors libssl || printf %s '-lssl -lcrypto'` `command -v pkg-config > /dev/null && pkg-config --libs --silence-errors libcrypto || printf %s '-lcrypto'` -lpcre2-8 -lm -lgc -lpthread -levent  -lrt -lpthread -ldl
             mv invidious invidious.${{ matrix.os }}.arm64
       - name: Save invidious.${{ matrix.os }}.arm64
         uses: actions/upload-artifact@v3
@@ -80,6 +80,16 @@ jobs:
         with:
           name: invidious.${{ matrix.os }}.amd64
           path: invidious.${{ matrix.os }}.amd64
+      - name: Cross compile for arm64
+        run: crystal build src/invidious.cr --progress --stats --error-trace --cross-compile --target "aarch64-linux-gnu"
+      - name: Rename pre-linking object
+        run: mv invidious.o invidious.${{ matrix.os }}.arm64.o
+      - name: Save invidious
+        uses: actions/upload-artifact@v3
+        with:
+          name: invidious.${{ matrix.os }}.arm64.o
+          path: invidious.${{ matrix.os }}.arm64.o
+          
   publish:
     needs: [ "common", "arm64", "amd64" ]
     runs-on: ubuntu-latest
@@ -91,7 +101,7 @@ jobs:
       - name: Download invidious arm64 bullseye
         uses: actions/download-artifact@v3
         with:
-          name: invidious.bullseye.arm64.tar.xz
+          name: invidious.bullseye.arm64
       # - name: Download invidious arm64 bookworm
       #   uses: actions/download-artifact@v3
       #   with:
@@ -99,7 +109,7 @@ jobs:
       - name: Download invidious amd64 bullseye
         uses: actions/download-artifact@v3
         with:
-          name: invidious.bullseye.amd64.tar.xz
+          name: invidious.bullseye.amd64
       # - name: Download invidious amd64 bookworm
       #   uses: actions/download-artifact@v3
       #   with:
